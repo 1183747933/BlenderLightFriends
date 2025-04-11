@@ -16,7 +16,7 @@
 
 1. Package the project into a ZIP file or directly download the plugin Python file (`BlenderLightFriends.py`).  
 2. Open Blender, go to **Edit > Preferences > Add-ons**, click **Install** and select the ZIP or Python file.  
-3. Enable the plugin in the add-ons list. The plugin panel will appear under the **[ LIGHT ]** tab in the 3D Viewport sidebar.  
+3. Enable the plugin in the add-ons list. The plugin panel will appear under the **[ 光 ]** tab in the 3D Viewport sidebar.  
 
 ---
 

@@ -13,94 +13,90 @@ import math
 from mathutils import Vector
 import bpy_extras.view3d_utils
 
-# ------------------------- 属性组定义 -------------------------
 class LightPreset(bpy.types.PropertyGroup):
     shape: bpy.props.EnumProperty(
-        name="形状",
-        items=[('RECTANGLE', '长方形', ''), ('ELLIPSE', '椭圆', '')],
+        name="Shape",
+        items=[('RECTANGLE', 'Rectangle', ''), ('ELLIPSE', 'Ellipse', '')],
         default='RECTANGLE'
     )
     size: bpy.props.FloatProperty(
-        name="宽度",
+        name="Width",
         default=2.0,
         min=0.1,
         max=50.0
     )
     height: bpy.props.FloatProperty(
-        name="高度",
+        name="Height",
         default=1.0,
         min=0.1,
         max=50.0
     )
     spread: bpy.props.FloatProperty(
-        name="扩散度",
+        name="Spread",
         default=0.2,
         min=0.0,
         max=1.0,
         subtype='FACTOR'
     )
     distance: bpy.props.FloatProperty(
-        name="默认距离",
+        name="Default Distance",
         default=10.0,
         min=0.1,
         max=100.0
     )
     power: bpy.props.FloatProperty(
-        name="功率",
+        name="Power",
         default=500.0,
         min=0.0,
         soft_max=2000.0
     )
 
 class LightItem(bpy.types.PropertyGroup):
-    name: bpy.props.StringProperty(name="名称")
+    name: bpy.props.StringProperty(name="Name")
     light_obj: bpy.props.PointerProperty(type=bpy.types.Object)
-
     longitude: bpy.props.FloatProperty(
-        name="经度",
+        name="Longitude",
         default=0.0,
         min=-180.0,
         max=180.0,
         update=lambda self, context: self.update_geo_position()
     )
     latitude: bpy.props.FloatProperty(
-        name="纬度",
+        name="Latitude",
         default=45.0,
         min=-89.9,
         max=89.9,
         update=lambda self, context: self.update_geo_position()
     )
     distance: bpy.props.FloatProperty(
-        name="距离",
+        name="Distance",
         default=10.0,
         min=0.1,
         max=100.0,
         update=lambda self, context: self.update_geo_position()
     )
-    # “约束偏移”：调整空对象在跟踪目标内的局部坐标，修改时仅更新空对象位置，不改变角度与距离
     track_offset: bpy.props.FloatVectorProperty(
-        name="约束偏移",
+        name="Constraint Offset",
         subtype='TRANSLATION',
         default=(0.0, 0.0, 0.0),
         update=lambda self, context: self.update_geo_position()
     )
-    # 灯光物理属性
     size: bpy.props.FloatProperty(
-        name="宽度",
+        name="Width",
         default=2.0,
         min=0.1,
         max=50.0,
         update=lambda self, context: self.update_light_data()
     )
     height: bpy.props.FloatProperty(
-        name="高度",
+        name="Height",
         default=1.0,
         min=0.1,
         max=50.0,
         update=lambda self, context: self.update_light_data()
     )
     spread: bpy.props.FloatProperty(
-        name="扩散度",
+        name="Spread",
         default=0.2,
         min=0.0,
         max=1.0,
@@ -108,39 +104,34 @@ class LightItem(bpy.types.PropertyGroup):
         update=lambda self, context: self.update_light_data()
     )
     power: bpy.props.FloatProperty(
-        name="功率",
+        name="Power",
         default=500.0,
         min=0.0,
         soft_max=2000.0,
         update=lambda self, context: self.update_light_data()
     )
     color: bpy.props.FloatVectorProperty(
-        name="颜色",
+        name="Color",
         subtype='COLOR',
         default=(1.0, 1.0, 1.0),
         min=0.0,
         max=1.0,
         update=lambda self, context: self.update_light_data()
     )
-    # 新增：法线跟踪选项
     normal_tracking: bpy.props.BoolProperty(
-        name="法线跟踪",
+        name="Normal Tracking",
         default=False
     )
-    # 跟踪设置，必须指定一个跟踪目标
     track_target: bpy.props.PointerProperty(
         type=bpy.types.Object,
-        name="跟踪目标",
+        name="Tracking Target",
         update=lambda self, context: self.setup_constraints()
     )
-    # 内部使用的空对象，用作跟踪约束目标
     offset_obj: bpy.props.PointerProperty(
-        name="约束空对象",
+        name="Constraint Empty",
         type=bpy.types.Object
     )
-
     def update_geo_position(self):
-        """更新灯光位置与旋转。"""
         if not self.light_obj or not self.track_target:
             return
         if self.offset_obj:
@@ -160,9 +151,7 @@ class LightItem(bpy.types.PropertyGroup):
             0,
             math.radians(self.longitude) + math.pi / 2
         )
-
     def update_light_data(self):
-        """更新灯光的物理属性。"""
         if self.light_obj and self.light_obj.data:
             light = self.light_obj.data
             light.size = self.size
@@ -170,13 +159,11 @@ class LightItem(bpy.types.PropertyGroup):
             light.spread = self.spread
             light.energy = self.power
             light.color = self.color
-
     def setup_constraints(self):
-        """设置灯光追踪约束，将空对象作为追踪目标。"""
         if not self.light_obj or not self.track_target:
             return
         if not self.offset_obj:
-            empty_name = f"空_{self.light_obj.name}"
+            empty_name = f"Empty_{self.light_obj.name}"
             empty = bpy.data.objects.new(empty_name, None)
             empty.empty_display_size = 0.5
             empty.empty_display_type = 'ARROWS'
@@ -196,27 +183,22 @@ class LightItem(bpy.types.PropertyGroup):
         track_constraint.track_axis = 'TRACK_NEGATIVE_Z'
         track_constraint.up_axis = 'UP_Y'
 
-# ------------------------- Modal 指哪打哪 操作符 -------------------------
 class LIGHT_OT_PointAndShoot(bpy.types.Operator):
     bl_idname = "light.point_and_shoot"
-    bl_label = "指哪打哪"
+    bl_label = "Point and Shoot"
     bl_options = {'REGISTER', 'UNDO'}
-
     _light_item = None
     is_tracking = False
-
     def modal(self, context, event):
-        # 退出条件：右键或 ESC 取消
         if event.type in {'RIGHTMOUSE', 'ESC'}:
-            self.report({'INFO'}, "指哪打哪取消")
+            self.report({'INFO'}, "Point and Shoot canceled")
             return {'CANCELLED'}
         if event.type == 'LEFTMOUSE':
             if event.value == 'PRESS':
                 self.is_tracking = True
             elif event.value == 'RELEASE':
-                self.report({'INFO'}, "指哪打哪结束")
+                self.report({'INFO'}, "Point and Shoot finished")
                 return {'FINISHED'}
-        # 只有在左键按下后才进行更新
         if self.is_tracking and event.type == 'MOUSEMOVE':
             region = context.region
             rv3d = context.space_data.region_3d
@@ -225,36 +207,30 @@ class LIGHT_OT_PointAndShoot(bpy.types.Operator):
             ray_origin = bpy_extras.view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
             result, location, normal, index, obj, matrix = context.scene.ray_cast(context.view_layer.depsgraph, ray_origin, view_vector)
             if result:
-                # 指哪打哪：计算新 track_offset 使空对象移至击中点
                 new_track_offset = location - self._light_item.track_target.location
                 self._light_item.track_offset = new_track_offset
-                # 如果勾选了法线跟踪，则根据 hit normal 更新经纬度
                 if self._light_item.normal_tracking:
                     n = normal.normalized()
-                    theta = math.acos(n.z)  # 与 Z 轴夹角
+                    theta = math.acos(n.z)
                     new_latitude = 90 - math.degrees(theta)
                     new_longitude = math.degrees(math.atan2(n.y, n.x))
                     self._light_item.latitude = new_latitude
                     self._light_item.longitude = new_longitude
-                # 调用更新，注意：距离保持不变
                 self._light_item.update_geo_position()
         return {'RUNNING_MODAL'}
-
     def invoke(self, context, event):
         idx = context.scene.light_index
         if idx < 0:
-            self.report({'ERROR'}, "未选中面光对象")
+            self.report({'ERROR'}, "No light selected")
             return {'CANCELLED'}
         self._light_item = context.scene.light_items[idx]
         self.is_tracking = False
         context.window_manager.modal_handler_add(self)
-        self.report({'INFO'}, "请按下左键后拖动鼠标选择目标位置，然后松开结束")
+        self.report({'INFO'}, "Press left mouse button and drag to select target position, then release to finish")
         return {'RUNNING_MODAL'}
 
-# ------------------------- UI 列表 -------------------------
 class LIGHT_UL_LightList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
-        # 在默认布局下仅显示名称和右侧的删除按钮
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             row = layout.row(align=True)
             row.label(text=item.name, icon='LIGHT')
@@ -263,34 +239,26 @@ class LIGHT_UL_LightList(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.label(text="", icon='LIGHT')
 
-# ------------------------- 主面板 -------------------------
 class LIGHT_PT_MainPanel(bpy.types.Panel):
     bl_label = "BlenderLightFriends"
-    bl_space_type = 'VIEW_3D'
+    bl_space_type = 'VIEW3D'
     bl_region_type = 'UI'
-    bl_category = '[ 光 ]'
-
+    bl_category = "[ 光 ]"
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-
-        # 全局预设
         box = layout.box()
-        box.label(text="预设参数")
+        box.label(text="Preset Parameters")
         box.prop(scene.light_preset, "shape")
         box.prop(scene.light_preset, "size")
         box.prop(scene.light_preset, "height")
         box.prop(scene.light_preset, "spread")
         box.prop(scene.light_preset, "distance")
         box.prop(scene.light_preset, "power")
-
-        # 灯光列表管理：新建按钮使用 “+” 图标
         layout.separator()
         row = layout.row(align=True)
         row.operator("light.add_light", icon='ADD')
         layout.template_list("LIGHT_UL_LightList", "", scene, "light_items", scene, "light_index")
-
-        # 单个灯光详细设置
         if scene.light_index >= 0:
             item = scene.light_items[scene.light_index]
             box = layout.box()
@@ -304,47 +272,40 @@ class LIGHT_PT_MainPanel(bpy.types.Panel):
             box.prop(item, "track_target")
             if item.track_target:
                 box.separator()
-                box.label(text="环绕参数:")
+                box.label(text="Surround Parameters:")
                 col = box.column()
-                col.prop(item, "longitude", slider=True, text="经度")
-                col.prop(item, "latitude", slider=True, text="纬度")
+                col.prop(item, "longitude", slider=True, text="Longitude")
+                col.prop(item, "latitude", slider=True, text="Latitude")
                 col.prop(item, "distance")
-                col.prop(item, "track_offset", text="约束偏移")
+                col.prop(item, "track_offset", text="Constraint Offset")
                 box.separator()
-                # 新增“法线跟踪”复选框
-                box.prop(item, "normal_tracking", text="法线跟踪")
+                box.prop(item, "normal_tracking", text="Normal Tracking")
                 box.separator()
-                # 新增“指哪打哪”按钮，图标使用 HAND（手形）
-                box.operator("light.point_and_shoot", text="指哪打哪", icon='HAND')
+                box.operator("light.point_and_shoot", text="Point and Shoot", icon='HAND')
 
-# ------------------------- 新建/删除操作符 -------------------------
 class LIGHT_OT_AddLight(bpy.types.Operator):
     bl_idname = "light.add_light"
-    bl_label = "新建面光"
-
+    bl_label = "Add Light"
     def execute(self, context):
         preset = context.scene.light_preset
         candidate = None
         if context.active_object is not None:
             candidate = context.active_object
-
         bpy.ops.object.light_add(
             type='AREA',
             radius=preset.size,
             location=context.scene.cursor.location
         )
         new_light = context.active_object
-        new_light.name = f"面光_{len(context.scene.light_items) + 1}"
+        new_light.name = f"Light_{len(context.scene.light_items) + 1}"
         light_data = new_light.data
         light_data.shape = preset.shape
         light_data.size = preset.size
         light_data.size_y = preset.height
         light_data.spread = preset.spread
         light_data.energy = preset.power
-
         new_light.select_set(True)
         context.view_layer.objects.active = new_light
-
         item = context.scene.light_items.add()
         item.name = new_light.name
         item.light_obj = new_light
@@ -353,7 +314,6 @@ class LIGHT_OT_AddLight(bpy.types.Operator):
         item.spread = preset.spread
         item.power = preset.power
         item.distance = preset.distance
-
         if candidate is not None and candidate != new_light:
             item.track_target = candidate
         elif len(context.scene.light_items) > 1:
@@ -361,21 +321,17 @@ class LIGHT_OT_AddLight(bpy.types.Operator):
                 if prev_item.track_target:
                     item.track_target = prev_item.track_target
                     break
-
         if item.track_target:
             item.setup_constraints()
-
         item.update_geo_position()
         item.update_light_data()
-
         context.scene.light_index = len(context.scene.light_items) - 1
         return {'FINISHED'}
 
 class LIGHT_OT_RemoveLight(bpy.types.Operator):
     bl_idname = "light.remove_light"
-    bl_label = "删除面光"
+    bl_label = "Delete Light"
     item_name: bpy.props.StringProperty()
-
     def execute(self, context):
         scene = context.scene
         for i, item in enumerate(scene.light_items):
@@ -389,7 +345,6 @@ class LIGHT_OT_RemoveLight(bpy.types.Operator):
         scene.light_index = min(scene.light_index, len(scene.light_items) - 1)
         return {'FINISHED'}
 
-# ------------------------- 帧变化处理器 -------------------------
 def frame_change_handler(scene):
     active_index = scene.light_index
     for i, item in enumerate(scene.light_items):
@@ -402,10 +357,9 @@ def frame_change_handler(scene):
             else:
                 item.light_obj.select_set(False)
     for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D':
+        if area.type == 'VIEW3D':
             area.tag_redraw()
 
-# ------------------------- 更新 active index 回调 -------------------------
 def update_light_index(self, context):
     idx = self.light_index
     for i, item in enumerate(self.light_items):
@@ -418,7 +372,6 @@ def update_light_index(self, context):
 
 bpy.types.Scene.light_index = bpy.props.IntProperty(default=-1, update=update_light_index)
 
-# ------------------------- 注册/注销 -------------------------
 classes = (
     LightPreset,
     LightItem,
