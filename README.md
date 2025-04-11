@@ -1,123 +1,98 @@
-# BlenderLightFriends
+<p align="right">
+    <b>语言：</b> <a href="README.md">中文</a> | <a href="README_EN.md">English</a>
+</p>
 
-**BlenderLightFriends** is a lighting plugin designed for efficient surface lighting setup, inspired by KeyShot's lighting workflow. It focuses on animation rendering and flexibility. Key features include:  
-- **Object Tracking**  
-  Each light can be set to track a target object. The "Constraint Offset" allows adjusting the target position offset.  
-- **Create Lights**  
-  Preset parameters can be customized when creating new lights. Selecting a target object before clicking "Create" will automatically bind the light to track the target.  
-- **"Point-and-Shoot" Mode** 🎯  
-  A modal operator enables intuitive "point-and-shoot" functionality. When activated:  
-  - Hold the left mouse button and drag to cast a raycast that updates the light's constraint offset to the clicked surface position.  
-  - If "Normal Tracking" is enabled, the light's latitude/longitude (distance remains fixed) will align with the surface normal of the hit point.  
+# BlenderLightFriends 插件简易说明
+
+## 插件简介
+
+**BlenderLightFriends** 是一个为Blender设计的灯光管理插件，主要用于在3D场景中快速添加、管理、控制和动画化灯光。它支持类似摄影棚布光的方式，通过经纬度和距离参数让灯光围绕目标对象布置，并支持关键帧动画和“指哪打哪”操作。
 
 ---
 
-## Installation
+## 安装与启用
 
-1. Package the project into a ZIP file or directly download the plugin Python file (`BlenderLightFriends.py`).  
-2. Open Blender, go to **Edit > Preferences > Add-ons**, click **Install** and select the ZIP or Python file.  
-3. Enable the plugin in the add-ons list. The plugin panel will appear under the **[ 光 ]** tab in the 3D Viewport sidebar.  
-
----
-
-## Usage Guide
-
-1. **Set Preset Parameters**  
-   Adjust global settings at the top of the panel: light shape, size, height, spread, default distance, and power.  
-
-2. **Create a Surface Light**  
-   Select the target object you want to track, then click the **+** button to create a new light.  
-
-3. **Edit Light Properties**  
-   Modify physical attributes (size, power, color) and orbital parameters (latitude/longitude, distance, constraint offset) in the detailed settings area.  
-
-4. **"Point-and-Shoot" Mode**  
-   - Click the **"Point-and-Shoot"** button in the detailed settings to enter modal mode.  
-   - Press and drag the left mouse button to cast a raycast. The plugin updates the constraint offset to the clicked surface position.  
-   - If "Normal Tracking" is enabled, the light's latitude/longitude will align with the surface normal (distance remains fixed).  
-   - Release the mouse button to exit the mode.  
-
-5. **Delete a Light**  
-   Click the trash bin icon next to each light entry in the UI list to remove the light and its associated empty object.  
+1. 将本插件脚本保存 (`blender_light_friends.py`)。
+2. 在Blender中打开**编辑 > 偏好设置 > 插件**，点击**安装**，选择此文件并启用插件。
+3. 在3D视图的**右侧侧边栏（N键）**，会出现一个新标签 **[ 光 ]**，插件操作区就在这里。
 
 ---
 
-## Future Updates
+## 功能概览
 
-- Optimize UI/UX.  
-- Save preset parameters.  
-- Add more light types: Point Lights, Emission Materials.  
-- Gradient lighting support.  
+### 1. 预设参数设置
 
----
+- **形状（Shape）**：选择灯光为矩形(Rectangle)或椭圆(Ellipse)。
+- **宽度/高度（Width/Height）**：设置灯光面板的尺寸。
+- **扩散（Spread）**：控制灯光的扩散角度。
+- **默认距离（Default Distance）**：新建灯光默认距离目标的长度。
+- **功率（Power）**：灯光的能量/亮度。
 
-## Compatibility
-
-- The plugin requires no external dependencies.  
-- Tested and verified on **Blender 3.6 and above**.  
-- For issues, contact the author or leave a message via GitHub Issues.  
+**每个参数右侧都可以插入关键帧，实现动画。**
 
 ---
 
-## Give it a ⭐ if you like this project!
+### 2. 灯光列表与管理
+
+- 点击**添加灯光**按钮，可以根据上方预设参数添加一个新的Area Light。
+- 插件会自动将新灯光围绕选中的对象布置（如未选中对象，则会继承上一灯光的目标）。
+- 每个灯光会以列表方式显示，支持一键删除（垃圾桶按钮）。
 
 ---
 
-<details>
-  <summary>🇨 查看中文版说明 (Click to view Chinese version) 🎉</summary>
+### 3. 灯光详细参数
 
-## 简介
+- 在列表中选择一个灯光后，下方会显示该灯光的详细可调参数：
+  - **宽度/高度/扩散/功率/颜色**：均可调节并插入关键帧。
+  - **跟踪目标（Tracking Target）**：选择被灯光围绕的目标对象。
+- 若设置了跟踪目标，则出现**环绕参数**：
+  - **经度/纬度**：用球坐标方式控制灯光相对于目标的环绕方位。
+  - **距离**：灯光离目标的距离。
+  - **约束偏移**：可微调灯光相对于目标的偏移。
+  - **法线追踪**：开启后，灯光可根据表面法线自动调整朝向。
 
-**BlenderLightFriends** 是一个打光插件，具有高效的面光添加功能，参考了keyshot的打光模式，更侧重动画渲染与灵活性。  
-主要功能包括：  
-- **对象跟踪** 
-  每个灯光可以选择跟踪目标，可通过调整“约束偏移”实现灯光目标点的偏移。
-- **新建灯光**   
-  新建灯光可以调整预设生成，选择目标后再点新建将会自动绑定跟踪对象。
-- **“指哪打哪”模式** ️  
-  通过一个模态操作符，实现“指哪打哪”功能。进入该模式后，按住鼠标左键拖动，插件将利用射线投射获取光标所在的目标表面位置，并更新灯光的约束偏移；
-  若勾选“法线跟踪”，则根据击中的表面法线自动更新灯光的经纬度（距离保持不变）。
-
-## 安装
-
-1. 将整个项目打包成 ZIP 文件，或者直接下载插件python文件（ `BlenderLightFriends.py`）。
-2. 打开 Blender，进入 **编辑 > 首选项 > 插件**，点击 **安装** 按钮并选择下载的 ZIP 或 Python 文件。
-3. 安装后在插件列表中启用本插件。启用后插件面板会显示在 3D 视图侧边栏的 **[ 光 ]** 标签中。
-
-## 使用说明
-
-1. **设置预设参数**   
-   在面板顶部调整全局预设参数：面光形状、尺寸、高度、扩散度、默认距离和功率。
-
-2. **新建面光**   
-   选中需要进行灯光跟踪的对象，点击 **+** 按钮新建一个面光对象。。
-
-3. **编辑灯光参数**   
-   在详细设置区域修改面光的物理属性（尺寸、功率、颜色等）以及环绕参数（经纬度、距离、约束偏移）。
-
-4. **指哪打哪模式**   
-   - 在详细设置区域点击 **“指哪打哪”** 按钮进入模态操作模式。
-   - 按下鼠标左键后拖动，插件使用射线检测光标位置并更新约束偏移，使空对象移动到目标位置；若启用了“法线跟踪”，则根据击中表面的法线更新经纬度（距离保持不变）。
-   - 松开鼠标左键结束操作。
-
-5. **删除面光**   
-   在 UI 列表中，每个面光项右侧都有删除按钮（垃圾桶图标），点击即可删除对应的面光及其相关空对象。
-
-## 未来更新方向
-
-- 优化界面UI。
-- 预设参数保存。
-- 更多灯光类型：点光源，自发光材质。
-- 渐变灯光。
-
-## 有关兼容性
-
-- 直接导入插件即可，无需额外安装第三方库。  
-- 已在 Blender 3.6 及以上版本中测试通过。
-- 如有问题，请联系作者或者在 GitHub Issues 中留言反馈。
-
-## 喜欢本项目请给我点个⭐️吧~
 ---
 
-Feel free to contribute, report issues, or suggest improvements!
-</details>
+### 4. Point and Shoot（指哪打哪）
+
+- 点击 **Point and Shoot** 按钮，鼠标左键按住并拖动，在3D视图中“射”到你希望灯光照射的位置，释放左键后灯光会自动移动到该位置并对准该点。
+- **ESC或右键**可取消操作。
+
+---
+
+### 5. 动画支持
+
+- 所有参数都可以通过右侧的**关键帧按钮**插入关键帧，方便制作灯光动画。
+
+---
+
+## 其他说明
+
+- 插件会自动同步灯光和目标的关系，并在时间轴切换时自动更新灯光位置和参数。
+- 删除灯光时，相关的空对象（约束辅助Empty）也会一并删除，保持场景整洁。
+- 插件支持多灯光管理，方便搭建复杂布光方案。
+
+---
+
+## 常见问题
+
+**Q1：添加灯光时如何指定目标？**  
+A：先选中一个对象（如你的人物、场景道具等），再点击插件的“添加灯光”按钮，灯光会自动围绕该对象布置。
+
+**Q2：如何让灯光环绕目标运动？**  
+A：调整“经度”“纬度”“距离”参数，并插入关键帧，即可制作环绕动画。
+
+**Q3：Point and Shoot无法生效？**  
+A：确保你已选中灯光，并设置了跟踪目标，然后使用Point and Shoot。
+
+---
+
+## 快速操作流程示例
+
+1. 选中你希望灯光围绕的对象。
+2. 设置好预设参数，点击“添加灯光”。
+3. 在列表中选择灯光，微调参数，或用Point and Shoot快速定位。
+4. 如需动画，点击对应参数右侧的关键帧按钮。
+5. 多灯光布置时，重复上述操作，可快速完成复杂布光。
+
+---

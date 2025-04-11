@@ -13,124 +13,78 @@ import math
 from mathutils import Vector
 import bpy_extras.view3d_utils
 
+
+# -------------------------------------------------------------------------
+# Custom Operator: Insert Keyframe for a given data_path
+# -------------------------------------------------------------------------
+class LIGHT_OT_InsertKeyframe(bpy.types.Operator):
+    bl_idname = "light.insert_keyframe"
+    bl_label = "Insert Keyframe"
+    data_path: bpy.props.StringProperty()
+    index: bpy.props.IntProperty(default=-1)
+
+    def execute(self, context):
+        try:
+            context.scene.keyframe_insert(data_path=self.data_path, index=self.index)
+        except Exception as e:
+            self.report({'ERROR'}, "Keyframe insertion failed: " + str(e))
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
+# -------------------------------------------------------------------------
+# Property Groups
+# -------------------------------------------------------------------------
 class LightPreset(bpy.types.PropertyGroup):
     shape: bpy.props.EnumProperty(
         name="Shape",
-        items=[('RECTANGLE', 'Rectangle', ''), ('ELLIPSE', 'Ellipse', '')],
+        items=[('RECTANGLE', "Rectangle", ""), ('ELLIPSE', "Ellipse", "")],
         default='RECTANGLE'
     )
-    size: bpy.props.FloatProperty(
-        name="Width",
-        default=2.0,
-        min=0.1,
-        max=50.0
-    )
-    height: bpy.props.FloatProperty(
-        name="Height",
-        default=1.0,
-        min=0.1,
-        max=50.0
-    )
-    spread: bpy.props.FloatProperty(
-        name="Spread",
-        default=0.2,
-        min=0.0,
-        max=1.0,
-        subtype='FACTOR'
-    )
-    distance: bpy.props.FloatProperty(
-        name="Default Distance",
-        default=10.0,
-        min=0.1,
-        max=100.0
-    )
-    power: bpy.props.FloatProperty(
-        name="Power",
-        default=500.0,
-        min=0.0,
-        soft_max=2000.0
-    )
+    size: bpy.props.FloatProperty(name="Width", default=2.0, min=0.1, max=50.0)
+    height: bpy.props.FloatProperty(name="Height", default=1.0, min=0.1, max=50.0)
+    spread: bpy.props.FloatProperty(name="Spread", default=0.2, min=0.0, max=1.0, subtype='FACTOR')
+    distance: bpy.props.FloatProperty(name="Default Distance", default=10.0, min=0.1, max=100.0)
+    power: bpy.props.FloatProperty(name="Power", default=500.0, min=0.0, soft_max=2000.0)
+
 
 class LightItem(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name="Name")
     light_obj: bpy.props.PointerProperty(type=bpy.types.Object)
     longitude: bpy.props.FloatProperty(
-        name="Longitude",
-        default=0.0,
-        min=-180.0,
-        max=180.0,
+        name="Longitude", default=0.0, min=-180.0, max=180.0,
         update=lambda self, context: self.update_geo_position()
     )
     latitude: bpy.props.FloatProperty(
-        name="Latitude",
-        default=45.0,
-        min=-89.9,
-        max=89.9,
+        name="Latitude", default=45.0, min=-89.9, max=89.9,
         update=lambda self, context: self.update_geo_position()
     )
     distance: bpy.props.FloatProperty(
-        name="Distance",
-        default=10.0,
-        min=0.1,
-        max=100.0,
+        name="Distance", default=10.0, min=0.1, max=100.0,
         update=lambda self, context: self.update_geo_position()
     )
     track_offset: bpy.props.FloatVectorProperty(
-        name="Constraint Offset",
-        subtype='TRANSLATION',
-        default=(0.0, 0.0, 0.0),
+        name="Constraint Offset", subtype='TRANSLATION', default=(0.0, 0.0, 0.0),
         update=lambda self, context: self.update_geo_position()
     )
-    size: bpy.props.FloatProperty(
-        name="Width",
-        default=2.0,
-        min=0.1,
-        max=50.0,
-        update=lambda self, context: self.update_light_data()
-    )
-    height: bpy.props.FloatProperty(
-        name="Height",
-        default=1.0,
-        min=0.1,
-        max=50.0,
-        update=lambda self, context: self.update_light_data()
-    )
-    spread: bpy.props.FloatProperty(
-        name="Spread",
-        default=0.2,
-        min=0.0,
-        max=1.0,
-        subtype='FACTOR',
-        update=lambda self, context: self.update_light_data()
-    )
-    power: bpy.props.FloatProperty(
-        name="Power",
-        default=500.0,
-        min=0.0,
-        soft_max=2000.0,
-        update=lambda self, context: self.update_light_data()
-    )
-    color: bpy.props.FloatVectorProperty(
-        name="Color",
-        subtype='COLOR',
-        default=(1.0, 1.0, 1.0),
-        min=0.0,
-        max=1.0,
-        update=lambda self, context: self.update_light_data()
-    )
-    normal_tracking: bpy.props.BoolProperty(
-        name="Normal Tracking",
-        default=False
-    )
+    size: bpy.props.FloatProperty(name="Width", default=2.0, min=0.1, max=50.0,
+                                  update=lambda self, context: self.update_light_data())
+    height: bpy.props.FloatProperty(name="Height", default=1.0, min=0.1, max=50.0,
+                                    update=lambda self, context: self.update_light_data())
+    spread: bpy.props.FloatProperty(name="Spread", default=0.2, min=0.0, max=1.0,
+                                    subtype='FACTOR', update=lambda self, context: self.update_light_data())
+    power: bpy.props.FloatProperty(name="Power", default=500.0, min=0.0, soft_max=2000.0,
+                                   update=lambda self, context: self.update_light_data())
+    color: bpy.props.FloatVectorProperty(name="Color", subtype='COLOR',
+                                         default=(1.0, 1.0, 1.0), min=0.0, max=1.0,
+                                         update=lambda self, context: self.update_light_data())
+    normal_tracking: bpy.props.BoolProperty(name="Normal Tracking", default=False)
     track_target: bpy.props.PointerProperty(
-        type=bpy.types.Object,
-        name="Tracking Target",
+        type=bpy.types.Object, name="Tracking Target",
         update=lambda self, context: self.setup_constraints()
     )
-    offset_obj: bpy.props.PointerProperty(
-        name="Constraint Empty",
-        type=bpy.types.Object
-    )
+    offset_obj: bpy.props.PointerProperty(name="Constraint Empty", type=bpy.types.Object)
+
     def update_geo_position(self):
         if not self.light_obj or not self.track_target:
             return
@@ -151,6 +105,7 @@ class LightItem(bpy.types.PropertyGroup):
             0,
             math.radians(self.longitude) + math.pi / 2
         )
+
     def update_light_data(self):
         if self.light_obj and self.light_obj.data:
             light = self.light_obj.data
@@ -159,6 +114,7 @@ class LightItem(bpy.types.PropertyGroup):
             light.spread = self.spread
             light.energy = self.power
             light.color = self.color
+
     def setup_constraints(self):
         if not self.light_obj or not self.track_target:
             return
@@ -183,21 +139,47 @@ class LightItem(bpy.types.PropertyGroup):
         track_constraint.track_axis = 'TRACK_NEGATIVE_Z'
         track_constraint.up_axis = 'UP_Y'
 
+
+# -------------------------------------------------------------------------
+# Custom Operator: Insert Keyframe
+# -------------------------------------------------------------------------
+class LIGHT_OT_InsertKeyframe(bpy.types.Operator):
+    bl_idname = "light.insert_keyframe"
+    bl_label = "Insert Keyframe"
+    data_path: bpy.props.StringProperty()
+    index: bpy.props.IntProperty(default=-1)
+
+    def execute(self, context):
+        try:
+            context.scene.keyframe_insert(data_path=self.data_path, index=self.index)
+        except Exception as e:
+            self.report({'ERROR'}, "Keyframe insertion failed: " + str(e))
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
+# -------------------------------------------------------------------------
+# Modal Point and Shoot Operator (kept unchanged)
+# -------------------------------------------------------------------------
 class LIGHT_OT_PointAndShoot(bpy.types.Operator):
     bl_idname = "light.point_and_shoot"
     bl_label = "Point and Shoot"
     bl_options = {'REGISTER', 'UNDO'}
+
     _light_item = None
     is_tracking = False
+
     def modal(self, context, event):
         if event.type in {'RIGHTMOUSE', 'ESC'}:
             self.report({'INFO'}, "Point and Shoot canceled")
+            bpy.types.SpaceView3D.draw_handler_remove(self._handler, 'WINDOW')
             return {'CANCELLED'}
         if event.type == 'LEFTMOUSE':
             if event.value == 'PRESS':
                 self.is_tracking = True
             elif event.value == 'RELEASE':
                 self.report({'INFO'}, "Point and Shoot finished")
+                bpy.types.SpaceView3D.draw_handler_remove(self._handler, 'WINDOW')
                 return {'FINISHED'}
         if self.is_tracking and event.type == 'MOUSEMOVE':
             region = context.region
@@ -205,7 +187,8 @@ class LIGHT_OT_PointAndShoot(bpy.types.Operator):
             coord = (event.mouse_region_x, event.mouse_region_y)
             view_vector = bpy_extras.view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
             ray_origin = bpy_extras.view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
-            result, location, normal, index, obj, matrix = context.scene.ray_cast(context.view_layer.depsgraph, ray_origin, view_vector)
+            result, location, normal, index, obj, matrix = context.scene.ray_cast(context.view_layer.depsgraph,
+                                                                                  ray_origin, view_vector)
             if result:
                 new_track_offset = location - self._light_item.track_target.location
                 self._light_item.track_offset = new_track_offset
@@ -218,6 +201,7 @@ class LIGHT_OT_PointAndShoot(bpy.types.Operator):
                     self._light_item.longitude = new_longitude
                 self._light_item.update_geo_position()
         return {'RUNNING_MODAL'}
+
     def invoke(self, context, event):
         idx = context.scene.light_index
         if idx < 0:
@@ -226,9 +210,16 @@ class LIGHT_OT_PointAndShoot(bpy.types.Operator):
         self._light_item = context.scene.light_items[idx]
         self.is_tracking = False
         context.window_manager.modal_handler_add(self)
-        self.report({'INFO'}, "Press left mouse button and drag to select target position, then release to finish")
+        self._handler = bpy.types.SpaceView3D.draw_handler_add(
+            lambda ctx: None, (), 'WINDOW', 'POST_PIXEL'
+        )
+        self.report({'INFO'}, "Point and Shoot: press left mouse and drag, then release to finish")
         return {'RUNNING_MODAL'}
 
+
+# -------------------------------------------------------------------------
+# UI List
+# -------------------------------------------------------------------------
 class LIGHT_UL_LightList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
@@ -239,53 +230,103 @@ class LIGHT_UL_LightList(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.label(text="", icon='LIGHT')
 
+
+# -------------------------------------------------------------------------
+# Main Panel
+# -------------------------------------------------------------------------
 class LIGHT_PT_MainPanel(bpy.types.Panel):
     bl_label = "BlenderLightFriends"
-    bl_space_type = 'VIEW3D'
+    bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "[ 光 ]"
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
+        # Global Preset
         box = layout.box()
         box.label(text="Preset Parameters")
-        box.prop(scene.light_preset, "shape")
-        box.prop(scene.light_preset, "size")
-        box.prop(scene.light_preset, "height")
-        box.prop(scene.light_preset, "spread")
-        box.prop(scene.light_preset, "distance")
-        box.prop(scene.light_preset, "power")
+        row = box.row(align=True)
+        row.prop(scene.light_preset, "shape")
+        row = box.row(align=True)
+        row.prop(scene.light_preset, "size")
+        row.operator("light.insert_keyframe", text="", icon="KEYFRAME").data_path = "light_preset.size"
+        row = box.row(align=True)
+        row.prop(scene.light_preset, "height")
+        row.operator("light.insert_keyframe", text="", icon="KEYFRAME").data_path = "light_preset.height"
+        row = box.row(align=True)
+        row.prop(scene.light_preset, "spread")
+        row.operator("light.insert_keyframe", text="", icon="KEYFRAME").data_path = "light_preset.spread"
+        row = box.row(align=True)
+        row.prop(scene.light_preset, "distance")
+        row.operator("light.insert_keyframe", text="", icon="KEYFRAME").data_path = "light_preset.distance"
+        row = box.row(align=True)
+        row.prop(scene.light_preset, "power")
+        row.operator("light.insert_keyframe", text="", icon="KEYFRAME").data_path = "light_preset.power"
         layout.separator()
         row = layout.row(align=True)
         row.operator("light.add_light", icon='ADD')
         layout.template_list("LIGHT_UL_LightList", "", scene, "light_items", scene, "light_index")
+        # Active Light parameters
         if scene.light_index >= 0:
             item = scene.light_items[scene.light_index]
             box = layout.box()
             col = box.column()
-            col.prop(item, "size")
-            col.prop(item, "height")
-            col.prop(item, "spread")
-            col.prop(item, "power")
-            col.prop(item, "color")
+            row = col.row(align=True)
+            row.prop(item, "size")
+            row.operator("light.insert_keyframe", text="",
+                         icon="KEYFRAME").data_path = "light_items[%d].size" % scene.light_index
+            row = col.row(align=True)
+            row.prop(item, "height")
+            row.operator("light.insert_keyframe", text="",
+                         icon="KEYFRAME").data_path = "light_items[%d].height" % scene.light_index
+            row = col.row(align=True)
+            row.prop(item, "spread")
+            row.operator("light.insert_keyframe", text="",
+                         icon="KEYFRAME").data_path = "light_items[%d].spread" % scene.light_index
+            row = col.row(align=True)
+            row.prop(item, "power")
+            row.operator("light.insert_keyframe", text="",
+                         icon="KEYFRAME").data_path = "light_items[%d].power" % scene.light_index
+            row = col.row(align=True)
+            row.prop(item, "color")
+            row.operator("light.insert_keyframe", text="",
+                         icon="KEYFRAME").data_path = "light_items[%d].color" % scene.light_index
             box.separator()
             box.prop(item, "track_target")
             if item.track_target:
                 box.separator()
                 box.label(text="Surround Parameters:")
                 col = box.column()
-                col.prop(item, "longitude", slider=True, text="Longitude")
-                col.prop(item, "latitude", slider=True, text="Latitude")
-                col.prop(item, "distance")
-                col.prop(item, "track_offset", text="Constraint Offset")
+                row = col.row(align=True)
+                row.prop(item, "longitude", slider=True, text="Longitude")
+                row.operator("light.insert_keyframe", text="",
+                             icon="KEYFRAME").data_path = "light_items[%d].longitude" % scene.light_index
+                row = col.row(align=True)
+                row.prop(item, "latitude", slider=True, text="Latitude")
+                row.operator("light.insert_keyframe", text="",
+                             icon="KEYFRAME").data_path = "light_items[%d].latitude" % scene.light_index
+                row = col.row(align=True)
+                row.prop(item, "distance")
+                row.operator("light.insert_keyframe", text="",
+                             icon="KEYFRAME").data_path = "light_items[%d].distance" % scene.light_index
+                row = col.row(align=True)
+                row.prop(item, "track_offset", text="Constraint Offset")
+                row.operator("light.insert_keyframe", text="",
+                             icon="KEYFRAME").data_path = "light_items[%d].track_offset" % scene.light_index
                 box.separator()
                 box.prop(item, "normal_tracking", text="Normal Tracking")
                 box.separator()
                 box.operator("light.point_and_shoot", text="Point and Shoot", icon='HAND')
 
+
+# -------------------------------------------------------------------------
+# Add / Remove Operators
+# -------------------------------------------------------------------------
 class LIGHT_OT_AddLight(bpy.types.Operator):
     bl_idname = "light.add_light"
     bl_label = "Add Light"
+
     def execute(self, context):
         preset = context.scene.light_preset
         candidate = None
@@ -328,10 +369,12 @@ class LIGHT_OT_AddLight(bpy.types.Operator):
         context.scene.light_index = len(context.scene.light_items) - 1
         return {'FINISHED'}
 
+
 class LIGHT_OT_RemoveLight(bpy.types.Operator):
     bl_idname = "light.remove_light"
     bl_label = "Delete Light"
     item_name: bpy.props.StringProperty()
+
     def execute(self, context):
         scene = context.scene
         for i, item in enumerate(scene.light_items):
@@ -345,6 +388,10 @@ class LIGHT_OT_RemoveLight(bpy.types.Operator):
         scene.light_index = min(scene.light_index, len(scene.light_items) - 1)
         return {'FINISHED'}
 
+
+# -------------------------------------------------------------------------
+# Frame Change Handler and Active Index Update
+# -------------------------------------------------------------------------
 def frame_change_handler(scene):
     active_index = scene.light_index
     for i, item in enumerate(scene.light_items):
@@ -357,8 +404,9 @@ def frame_change_handler(scene):
             else:
                 item.light_obj.select_set(False)
     for area in bpy.context.screen.areas:
-        if area.type == 'VIEW3D':
+        if area.type == 'VIEW_3D':
             area.tag_redraw()
+
 
 def update_light_index(self, context):
     idx = self.light_index
@@ -370,8 +418,12 @@ def update_light_index(self, context):
             else:
                 item.light_obj.select_set(False)
 
+
 bpy.types.Scene.light_index = bpy.props.IntProperty(default=-1, update=update_light_index)
 
+# -------------------------------------------------------------------------
+# Registration
+# -------------------------------------------------------------------------
 classes = (
     LightPreset,
     LightItem,
@@ -380,7 +432,9 @@ classes = (
     LIGHT_OT_AddLight,
     LIGHT_OT_RemoveLight,
     LIGHT_OT_PointAndShoot,
+    LIGHT_OT_InsertKeyframe,
 )
+
 
 def register():
     for cls in classes:
@@ -390,6 +444,7 @@ def register():
     if frame_change_handler not in bpy.app.handlers.frame_change_post:
         bpy.app.handlers.frame_change_post.append(frame_change_handler)
 
+
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
@@ -398,6 +453,7 @@ def unregister():
     del bpy.types.Scene.light_index
     if frame_change_handler in bpy.app.handlers.frame_change_post:
         bpy.app.handlers.frame_change_post.remove(frame_change_handler)
+
 
 if __name__ == "__main__":
     register()
