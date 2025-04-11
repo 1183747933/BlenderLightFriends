@@ -1,6 +1,6 @@
 bl_info = {
     "name": "BlenderLightFriends",
-    "author": "Your Name",
+    "author": "LITTLE_HOUSE_STUDIO",
     "version": (1, 0),
     "blender": (3, 6, 0),
     "location": "View3D > Sidebar > [ 光 ]",
@@ -54,6 +54,7 @@ class LightPreset(bpy.types.PropertyGroup):
 class LightItem(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name="Name")
     light_obj: bpy.props.PointerProperty(type=bpy.types.Object)
+
     longitude: bpy.props.FloatProperty(
         name="Longitude",
         default=0.0,
@@ -131,6 +132,7 @@ class LightItem(bpy.types.PropertyGroup):
         name="Constraint Empty",
         type=bpy.types.Object
     )
+
     def update_geo_position(self):
         if not self.light_obj or not self.track_target:
             return
@@ -151,6 +153,7 @@ class LightItem(bpy.types.PropertyGroup):
             0,
             math.radians(self.longitude) + math.pi / 2
         )
+
     def update_light_data(self):
         if self.light_obj and self.light_obj.data:
             light = self.light_obj.data
@@ -159,6 +162,7 @@ class LightItem(bpy.types.PropertyGroup):
             light.spread = self.spread
             light.energy = self.power
             light.color = self.color
+
     def setup_constraints(self):
         if not self.light_obj or not self.track_target:
             return
@@ -187,8 +191,10 @@ class LIGHT_OT_PointAndShoot(bpy.types.Operator):
     bl_idname = "light.point_and_shoot"
     bl_label = "Point and Shoot"
     bl_options = {'REGISTER', 'UNDO'}
+
     _light_item = None
     is_tracking = False
+
     def modal(self, context, event):
         if event.type in {'RIGHTMOUSE', 'ESC'}:
             self.report({'INFO'}, "Point and Shoot canceled")
@@ -218,6 +224,7 @@ class LIGHT_OT_PointAndShoot(bpy.types.Operator):
                     self._light_item.longitude = new_longitude
                 self._light_item.update_geo_position()
         return {'RUNNING_MODAL'}
+
     def invoke(self, context, event):
         idx = context.scene.light_index
         if idx < 0:
@@ -241,9 +248,10 @@ class LIGHT_UL_LightList(bpy.types.UIList):
 
 class LIGHT_PT_MainPanel(bpy.types.Panel):
     bl_label = "BlenderLightFriends"
-    bl_space_type = 'VIEW3D'
+    bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "[ 光 ]"
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
@@ -357,7 +365,7 @@ def frame_change_handler(scene):
             else:
                 item.light_obj.select_set(False)
     for area in bpy.context.screen.areas:
-        if area.type == 'VIEW3D':
+        if area.type == 'VIEW_3D':
             area.tag_redraw()
 
 def update_light_index(self, context):
